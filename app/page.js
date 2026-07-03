@@ -90,7 +90,11 @@ export default function Home() {
       )}
 
       <div className="section-title">My watchlist</div>
-      {quotes === null && <div className="spin" />}
+      {quotes === null && (
+        <div>
+          <div className="skeleton" /><div className="skeleton" /><div className="skeleton" /><div className="skeleton" />
+        </div>
+      )}
       {quotes !== null && !quotes.length && (
         <div className="empty">Your watchlist is empty.<br />Search for a stock above to add one. 🔍</div>
       )}

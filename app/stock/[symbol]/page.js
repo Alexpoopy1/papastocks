@@ -6,8 +6,10 @@ import AIChat from "@/components/AIChat";
 import StockLogo from "@/components/StockLogo";
 import {
   inWatchlist, toggleWatch, getPortfolio, setHolding,
-  getAlerts, addAlert, removeAlert, onStoreChange
+  getAlerts, addAlert, removeAlert, onStoreChange,
+  isSmartNotify, toggleSmartNotify, setSmartLast, setPref
 } from "@/lib/store";
+import { smartSummary } from "@/components/Notifier";
 import { fmtPrice, fmtChange, fmtBig, timeAgo } from "@/lib/format";
 
 const RANGES = [
@@ -38,8 +40,18 @@ function BigChart({ points, up }) {
           <stop offset="100%" stopColor={color} stopOpacity="0" />
         </linearGradient>
       </defs>
-      <polygon points={area} fill="url(#fillgrad)" />
-      <polyline points={line} fill="none" stroke={color} strokeWidth="2.4" strokeLinejoin="round" strokeLinecap="round" />
+      <polygon className="chart-fill" points={area} fill="url(#fillgrad)" />
+      <polyline
+        key={points.length + "-" + points[0]?.t}
+        className="chart-line"
+        pathLength="1"
+        points={line}
+        fill="none"
+        stroke={color}
+        strokeWidth="2.4"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -59,6 +71,7 @@ export default function StockPage() {
   const [cost, setCost] = useState("");
   const [alertPrice, setAlertPrice] = useState("");
   const [toast, setToast] = useState("");
+  const [smart, setSmart] = useState(false);
 
   useEffect(() => {
     setWatched(inWatchlist(symbol));
@@ -66,6 +79,7 @@ export default function StockPage() {
       setWatched(inWatchlist(symbol));
       setHoldingState(getPortfolio()[symbol] || null);
       setAlerts(getAlerts().filter((a) => a.sym === symbol));
+      setSmart(isSmartNotify(symbol));
     };
     sync();
     return onStoreChange(sync);
@@ -100,28 +114,65 @@ export default function StockPage() {
 
   const aiContext = useMemo(() => {
     if (!data || data.error) return `The user is asking about the stock ${symbol}.`;
+    const headlines = (news || []).slice(0, 4).map((n) => `- ${n.title}`).join("\n");
     return `The user is viewing ${data.name} (${symbol}). Live data: price $${price?.toFixed(2)}, change today ${
       chgPct?.toFixed(2)
     }%, day range $${data.dayLow?.toFixed(2)}-$${data.dayHigh?.toFixed(2)}, 52-week range $${
       data.fiftyTwoWeekLow?.toFixed(2)
     }-$${data.fiftyTwoWeekHigh?.toFixed(2)}, volume ${data.volume}, exchange ${data.exchange}.${
       holding ? ` Papa owns ${holding.shares} shares bought around $${holding.cost}.` : ""
-    }`;
-  }, [data, symbol, holding, price, chgPct]);
+    }${headlines ? `\nRecent headlines:\n${headlines}` : ""}`;
+  }, [data, symbol, holding, price, chgPct, news]);
+
+  async function onSmartToggle() {
+    const turningOn = !smart;
+    if (turningOn && typeof Notification !== "undefined" && Notification.permission !== "granted") {
+      const perm = await Notification.requestPermission();
+      if (perm !== "granted") {
+        say("Allow notifications first (Settings tab)");
+        return;
+      }
+      setPref("notifications", true);
+    }
+    const on = toggleSmartNotify(symbol);
+    if (on && price != null) {
+      setSmartLast(symbol, price);
+      /* Instant first briefing so Papa sees what he signed up for. */
+      try {
+        const res = await fetch(`/api/spark?symbols=${symbol}`);
+        const q = (await res.json()).quotes?.[0];
+        const reg = await navigator.serviceWorker?.getRegistration();
+        if (q && reg && Notification.permission === "granted") {
+          reg.showNotification(`🤖 Smart updates ON for ${symbol}`, {
+            body: smartSummary(q),
+            icon: "/icon-192.png"
+          });
+        }
+      } catch {}
+      say(`Smart updates ON for ${symbol} 🤖`);
+    } else if (!on) {
+      say(`Smart updates off for ${symbol}`);
+    }
+  }
 
   return (
     <>
       <div className="topbar">
         <button className="btn-ghost" onClick={() => history.back()}>‹ Back</button>
-        <button
-          className="btn-ghost"
-          onClick={() => {
-            const added = toggleWatch(symbol);
-            say(added ? `${symbol} added to watchlist ⭐` : `${symbol} removed from watchlist`);
-          }}
-        >
-          {watched ? "★ Watching" : "☆ Watch"}
-        </button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button className={`btn-ghost ${smart ? "smart-on" : ""}`} onClick={onSmartToggle}>
+            {smart ? "🤖 Smart ON" : "🤖 Smart Notify"}
+          </button>
+          <button
+            className="btn-ghost"
+            onClick={() => {
+              const added = toggleWatch(symbol);
+              say(added ? `${symbol} added to watchlist ⭐` : `${symbol} removed from watchlist`);
+            }}
+          >
+            {watched ? "★" : "☆"}
+          </button>
+        </div>
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 10 }}>

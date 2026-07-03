@@ -48,7 +48,8 @@ and that's also what enables notifications on iOS (16.4+).
 | What | Service | Key needed? |
 |---|---|---|
 | Quotes, charts, search, trending, news | Yahoo Finance public endpoints (proxied through Next.js API routes) | No |
-| AI chat | text.pollinations.ai | No |
+| Buddy chat (smart mode) | Google Gemini 2.5 Flash free tier | Free key — put `GEMINI_API_KEY=...` in `.env.local` (get one at https://aistudio.google.com/apikey) |
+| Buddy chat (fallback) | text.pollinations.ai | No |
 
 ## Notes
 

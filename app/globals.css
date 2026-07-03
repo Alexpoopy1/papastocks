@@ -136,7 +136,7 @@ input, textarea { font: inherit; color: inherit; }
 }
 
 /* ---------- header ---------- */
-.greeting { margin: 10px 0 2px; font-size: 1.9rem; font-weight: 600; }
+.greeting { margin: 10px 0 2px; font-size: clamp(1.45rem, 5.5vw, 1.9rem); font-weight: 600; overflow-wrap: break-word; }
 .subgreet { color: var(--text-dim); margin-bottom: 18px; }
 
 .topbar { display: flex; align-items: center; justify-content: space-between; }
@@ -355,10 +355,11 @@ input, textarea { font: inherit; color: inherit; }
   background: var(--card); border: 1px solid var(--border);
   border-radius: 18px; padding: 16px; margin-bottom: 10px;
 }
-.pick-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-.score-ring { font-weight: 800; font-size: 1.1rem; }
-.pick-reason { color: var(--text-dim); font-size: 0.88rem; line-height: 1.45; }
-.badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.03em; }
+.pick-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+.pick-head > div:first-child { min-width: 0; flex: 1; }
+.score-ring { font-weight: 800; font-size: 1.1rem; white-space: nowrap; }
+.pick-reason { color: var(--text-dim); font-size: 0.88rem; line-height: 1.45; overflow-wrap: break-word; }
+.badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.03em; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .badge.buy { background: var(--up-bg); color: var(--up); }
 .badge.watch { background: rgba(251, 191, 36, 0.14); color: #fbbf24; }
 .badge.avoid { background: var(--down-bg); color: var(--down); }
@@ -430,3 +431,69 @@ input, textarea { font: inherit; color: inherit; }
 
 .fade-in { animation: fade 0.3s ease; }
 @keyframes fade { from { opacity: 0; transform: translateY(6px); } }
+
+/* ---------- modern motion ---------- */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+.shell > * { animation: rise 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+.shell > *:nth-child(1) { animation-delay: 0.02s; }
+.shell > *:nth-child(2) { animation-delay: 0.06s; }
+.shell > *:nth-child(3) { animation-delay: 0.1s; }
+.shell > *:nth-child(4) { animation-delay: 0.14s; }
+.shell > *:nth-child(5) { animation-delay: 0.18s; }
+.shell > *:nth-child(6) { animation-delay: 0.22s; }
+.shell > *:nth-child(7) { animation-delay: 0.26s; }
+.shell > *:nth-child(8) { animation-delay: 0.3s; }
+.shell > *:nth-child(n+9) { animation-delay: 0.34s; }
+
+.chart-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw-line 0.9s cubic-bezier(0.3, 0.7, 0.3, 1) forwards;
+}
+@keyframes draw-line { to { stroke-dashoffset: 0; } }
+.chart-fill { opacity: 0; animation: fade 0.5s ease 0.55s forwards; }
+
+.tab { transition: transform 0.15s cubic-bezier(0.3, 1.6, 0.5, 1); }
+.tab.active { transform: translateY(-2px); }
+.tab.active svg { filter: drop-shadow(0 3px 8px rgba(75, 159, 255, 0.35)); }
+
+.skeleton {
+  border-radius: 18px;
+  height: 68px;
+  margin-bottom: 9px;
+  background: linear-gradient(100deg, var(--card) 40%, var(--bg-elev2) 50%, var(--card) 60%);
+  background-size: 200% 100%;
+  animation: shimmer 1.3s linear infinite;
+  border: 1px solid var(--border);
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+.smart-on {
+  border-color: transparent !important;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(232, 121, 249, 0.25)) !important;
+  box-shadow: 0 0 14px rgba(129, 140, 248, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+
+/* ---------- responsive: tiny phones → desktop ---------- */
+@media (max-width: 389px) {
+  html { font-size: 15px; }
+  html[data-bigtext="1"] { font-size: 17.5px; }
+  .shell { padding-left: 14px; padding-right: 14px; }
+  .ticker-badge, .stock-logo { width: 38px; height: 38px; }
+  .tab { min-width: 48px; padding: 4px 6px; }
+}
+@media (min-width: 768px) {
+  .shell { max-width: 720px; }
+  .tabbar { left: 50%; right: auto; transform: translateX(-50%); width: 420px; }
+  .chat-scroll { max-height: 54vh; }
+}
+@media (min-width: 1100px) {
+  .shell { max-width: 780px; }
+}

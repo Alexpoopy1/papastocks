@@ -145,19 +145,7 @@ export default function Settings() {
         <button className="btn-ghost" onClick={testNotification}>Test 🔔</button>
       </div>
 
-      <div className="section-title">Add to Home Screen</div>
-      <div className="card">
-        <p style={{ lineHeight: 1.6, fontSize: ".92rem" }}>
-          📲 On your iPhone or iPad:
-          <br />1. Open this app in <b>Safari</b>
-          <br />2. Tap the <b>Share</b> button (square with arrow)
-          <br />3. Tap <b>“Add to Home Screen”</b>
-          <br /><br />
-          It becomes a real app icon — and that’s also what lets notifications work on iOS!
-        </p>
-      </div>
-
-      <p className="disclaimer">PapaStocks v1.0 · Made with ❤️ for Papa</p>
+      <p className="disclaimer">PapaStocks v1.1 · Made with ❤️ for Papa</p>
       {toast && <div className="toast">{toast}</div>}
     </>
   );
