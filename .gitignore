@@ -20,3 +20,7 @@ npm-debug.log*
 
 # local tool settings
 .claude/settings.local.json
+
+# push notification local state (keys + device subscriptions)
+.vapid.json
+.push-store.json

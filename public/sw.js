@@ -1,6 +1,6 @@
 /* PapaStocks service worker: offline shell + notification click handling. */
 
-const CACHE = "papastocks-v1";
+const CACHE = "papastocks-v2";
 const SHELL = ["/", "/markets", "/picks", "/ai", "/settings", "/manifest.json", "/icon-192.png"];
 
 self.addEventListener("install", (e) => {
@@ -34,23 +34,30 @@ self.addEventListener("fetch", (e) => {
 
 self.addEventListener("notificationclick", (e) => {
   e.notification.close();
+  const url = e.notification.data?.url || "/";
   e.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
       for (const client of list) {
-        if ("focus" in client) return client.focus();
+        if ("focus" in client) {
+          client.focus();
+          if (client.navigate && url !== "/") client.navigate(url);
+          return;
+        }
       }
-      return self.clients.openWindow("/");
+      return self.clients.openWindow(url);
     })
   );
 });
 
-/* Web-push ready: if you later add a push server, payloads will show. */
+/* Real background push from the PapaStocks server. */
 self.addEventListener("push", (e) => {
   let data = {};
   try { data = e.data.json(); } catch {}
   e.waitUntil(
     self.registration.showNotification(data.title || "PapaStocks", {
       body: data.body || "Something moved in the market.",
+      tag: data.tag,
+      data: { url: data.url || "/" },
       icon: "/icon-192.png",
       badge: "/icon-192.png"
     })

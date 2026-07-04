@@ -9,7 +9,7 @@ import {
   getAlerts, addAlert, removeAlert, onStoreChange,
   isSmartNotify, toggleSmartNotify, setSmartLast, setPref
 } from "@/lib/store";
-import { smartSummary } from "@/components/Notifier";
+import { smartSummary } from "@/lib/summary";
 import { fmtPrice, fmtChange, fmtBig, timeAgo } from "@/lib/format";
 
 const RANGES = [
