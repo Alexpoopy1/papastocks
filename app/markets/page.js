@@ -51,7 +51,7 @@ export default function Markets() {
 
       <div className="section-title">Major indexes</div>
       {idx === null && <div className="spin" />}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8 }}>
         {(idx || []).map((q, i) => {
           const up = (q.changePct ?? 0) >= 0;
           return (
@@ -64,7 +64,7 @@ export default function Markets() {
               </div>
               <span className={`chg ${up ? "up" : "down"}`} style={{ fontSize: ".7rem" }}>{fmtPct(q.changePct)}</span>
               <div style={{ marginTop: 6 }}>
-                <Sparkline data={q.spark} up={up} width={86} height={24} />
+                <Sparkline data={q.spark} up={up} width={86} height={24} fluid />
               </div>
             </div>
           );
