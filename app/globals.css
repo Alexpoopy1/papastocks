@@ -460,6 +460,24 @@ input, textarea { font: inherit; color: inherit; }
 .tab.active { transform: translateY(-2px); }
 .tab.active svg { filter: drop-shadow(0 3px 8px rgba(75, 159, 255, 0.35)); }
 
+.overview-card {
+  position: relative;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--card), var(--card)) padding-box,
+    linear-gradient(120deg, rgba(56, 189, 248, 0.5), rgba(232, 121, 249, 0.5), rgba(74, 222, 128, 0.5)) border-box;
+}
+
+.skeleton-line {
+  height: 13px;
+  border-radius: 8px;
+  margin-bottom: 9px;
+  background: linear-gradient(100deg, var(--bg-elev2) 40%, var(--pill) 50%, var(--bg-elev2) 60%);
+  background-size: 200% 100%;
+  animation: shimmer 1.3s linear infinite;
+}
+.skeleton-line.short { width: 55%; margin-bottom: 0; }
+
 .skeleton {
   border-radius: 18px;
   height: 68px;

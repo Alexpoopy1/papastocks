@@ -72,6 +72,7 @@ export default function StockPage() {
   const [alertPrice, setAlertPrice] = useState("");
   const [toast, setToast] = useState("");
   const [smart, setSmart] = useState(false);
+  const [overview, setOverview] = useState(null);
 
   useEffect(() => {
     setWatched(inWatchlist(symbol));
@@ -100,6 +101,31 @@ export default function StockPage() {
       .then((r) => r.json())
       .then((d) => setNews(d.news || []))
       .catch(() => setNews([]));
+  }, [symbol]);
+
+  /* Smart overview — cached for 15 minutes per symbol. */
+  useEffect(() => {
+    let alive = true;
+    setOverview(null);
+    try {
+      const cached = JSON.parse(sessionStorage.getItem(`ps_ov_${symbol}`) || "null");
+      if (cached && Date.now() - cached.ts < 15 * 60 * 1000) {
+        setOverview(cached.text);
+        return;
+      }
+    } catch {}
+    fetch(`/api/overview?symbol=${encodeURIComponent(symbol)}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (!alive) return;
+        const text = d.overview || "";
+        setOverview(text);
+        if (text) {
+          try { sessionStorage.setItem(`ps_ov_${symbol}`, JSON.stringify({ text, ts: Date.now() })); } catch {}
+        }
+      })
+      .catch(() => alive && setOverview(""));
+    return () => { alive = false; };
   }, [symbol]);
 
   function say(msg) {
@@ -144,7 +170,7 @@ export default function StockPage() {
         const reg = await navigator.serviceWorker?.getRegistration();
         if (q && reg && Notification.permission === "granted") {
           reg.showNotification(`🤖 Smart updates ON for ${symbol}`, {
-            body: smartSummary(q),
+            body: smartSummary(q) + (overview ? `\n\n${overview}` : ""),
             icon: "/icon-192.png"
           });
         }
@@ -206,6 +232,17 @@ export default function StockPage() {
         </div>
       </div>
 
+      <div className="section-title">Smart overview ✨</div>
+      <div className="card overview-card">
+        {overview === null && (
+          <div>
+            <div className="skeleton-line" /><div className="skeleton-line" /><div className="skeleton-line short" />
+          </div>
+        )}
+        {overview === "" && <span style={{ color: "var(--text-faint)" }}>Couldn’t build an overview right now — pull down to try again.</span>}
+        {overview && <p style={{ lineHeight: 1.55, fontSize: ".95rem" }}>{overview}</p>}
+      </div>
+
       {data && !data.error && (
         <>
           <div className="section-title">Key numbers</div>
@@ -240,9 +277,10 @@ export default function StockPage() {
           <div style={{ display: "grid", gap: 8 }}>
             <input className="searchbox" placeholder="Number of shares" inputMode="decimal" value={shares} onChange={(e) => setShares(e.target.value)} />
             <input className="searchbox" placeholder="Price you paid per share ($)" inputMode="decimal" value={cost} onChange={(e) => setCost(e.target.value)} />
-            <div style={{ display: "flex", gap: 8 }}>
+            <div style={{ display: "flex", gap: 8, alignItems: "stretch" }}>
               <button
                 className="btn-primary"
+                style={{ flex: 1, width: "auto", minWidth: 0 }}
                 onClick={() => {
                   setHolding(symbol, parseFloat(shares) || 0, parseFloat(cost) || 0);
                   setShowHoldingForm(false);
@@ -251,7 +289,7 @@ export default function StockPage() {
               >
                 Save
               </button>
-              <button className="btn-ghost" onClick={() => setShowHoldingForm(false)}>Cancel</button>
+              <button className="btn-ghost" style={{ flex: "none" }} onClick={() => setShowHoldingForm(false)}>Cancel</button>
             </div>
             {holding && (
               <button className="btn-ghost" style={{ color: "var(--down)" }} onClick={() => { setHolding(symbol, 0, 0); setShowHoldingForm(false); }}>
@@ -274,10 +312,10 @@ export default function StockPage() {
             <button className="btn-ghost" onClick={() => removeAlert(a.id)}>✕</button>
           </div>
         ))}
-        <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "stretch" }}>
           <input
             className="searchbox"
-            style={{ flex: 1 }}
+            style={{ flex: 1, minWidth: 0 }}
             placeholder={price != null ? `Price, e.g. ${fmtPrice(price)}` : "Price"}
             inputMode="decimal"
             value={alertPrice}
@@ -285,6 +323,7 @@ export default function StockPage() {
           />
           <button
             className="btn-ghost"
+            style={{ flex: "none" }}
             onClick={() => {
               const p = parseFloat(alertPrice);
               if (!p) return say("Type a price first");
