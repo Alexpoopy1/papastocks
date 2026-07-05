@@ -53,7 +53,7 @@ and that's also what enables notifications on iOS (16.4+).
 
 ## Notes
 
-- Notifications fire while the app is open or in the background tab (the app polls every
-  60 s). True remote push (app fully closed) would need a small push server with VAPID
-  keys — the service worker is already wired with a `push` handler, so it's plug-in ready.
+- Notifications are real Web Push — they arrive even with the app fully closed. On a
+  long-running server it just works; on Vercel you need a KV store and a cron hitting
+  `/api/push/tick` — see **[PRODUCTION.md](PRODUCTION.md)** for the 5-minute setup.
 - Prices can be delayed a few minutes. PapaStocks is for information only — not financial advice. ❤️

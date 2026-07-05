@@ -145,7 +145,7 @@ export default function Settings() {
         <button className="btn-ghost" onClick={testNotification}>Test 🔔</button>
       </div>
 
-      <p className="disclaimer">PapaStocks v1.1 · Made with ❤️ for Papa</p>
+      <p className="disclaimer">PapaStocks v1.2 · Made with ❤️ for Papa</p>
       {toast && <div className="toast">{toast}</div>}
     </>
   );

@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    return Response.json({ key: getPublicKey() });
+    return Response.json({ key: await getPublicKey() });
   } catch (e) {
     return Response.json({ key: null, error: String(e.message || e) }, { status: 500 });
   }

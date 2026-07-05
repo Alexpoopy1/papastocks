@@ -41,13 +41,25 @@ async function syncPush() {
     const reg = await navigator.serviceWorker.ready;
     if (!reg.pushManager) return false;
 
+    const { key } = await (await fetch("/api/push/key")).json();
+    if (!key) return false;
+    const serverKey = b64ToUint8(key);
+
+    /* If the server's VAPID key changed since this device subscribed, the
+       old subscription is undeliverable — drop it and subscribe fresh. */
     let sub = await reg.pushManager.getSubscription();
+    if (sub) {
+      const cur = new Uint8Array(sub.options?.applicationServerKey || new ArrayBuffer(0));
+      const same = cur.length === serverKey.length && cur.every((b, i) => b === serverKey[i]);
+      if (!same) {
+        try { await sub.unsubscribe(); } catch {}
+        sub = null;
+      }
+    }
     if (!sub) {
-      const { key } = await (await fetch("/api/push/key")).json();
-      if (!key) return false;
       sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: b64ToUint8(key)
+        applicationServerKey: serverKey
       });
     }
 
