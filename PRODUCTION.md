@@ -54,17 +54,20 @@ Then in **Project → Settings → Environment Variables** add:
 If you skip this, the app generates a pair once and keeps it in KV — that works too,
 but env vars survive even a KV wipe, so existing subscriptions never break.
 
-### 3. The cron (already configured — check your plan)
+### 3. The cron (required)
 
-`vercel.json` schedules `GET /api/push/tick` every minute (`* * * * *`).
+This repo is set up for Vercel's **Hobby (free) plan**, which only allows once-daily
+crons — `vercel.json` ships a daily fallback tick (weekdays around market open). The
+real minute-by-minute checking comes from a free external pinger:
 
-- **Pro plan:** works as-is, nothing to do.
-- **Hobby plan:** Vercel limits crons to once per day, and a per-minute schedule will
-  be rejected at deploy time. Do this instead:
-  1. Delete the `crons` block from `vercel.json` (or change the schedule to daily).
-  2. Use a free external pinger — [cron-job.org](https://cron-job.org) or
-     UptimeRobot — to call `https://<your-app>.vercel.app/api/push/tick` every minute
-     (every 5 minutes also works; alerts are just a little less prompt).
+1. Sign up at [cron-job.org](https://cron-job.org) (free).
+2. Create a cronjob with URL `https://<your-app>.vercel.app/api/push/tick`,
+   schedule **every 1 minute** (every 5 minutes also works; alerts are just a little
+   less prompt), and save. That's it — UptimeRobot's free monitor works the same way
+   (5-minute interval).
+
+**On the Pro plan** you can skip the external pinger: change the schedule in
+`vercel.json` to `* * * * *` and Vercel runs it every minute itself.
 
 ### 4. Protect the tick endpoint (optional)
 
