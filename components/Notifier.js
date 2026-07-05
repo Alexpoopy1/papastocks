@@ -63,12 +63,22 @@ async function syncPush() {
       });
     }
 
-    await fetch("/api/push/subscribe", {
+    /* keepalive lets the config upload finish even if iOS freezes the app
+       mid-request (e.g. Papa sets an alert and immediately swipes away). */
+    const res = await fetch("/api/push/subscribe", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ subscription: sub.toJSON(), config: currentConfig() })
+      body: JSON.stringify({ subscription: sub.toJSON(), config: currentConfig() }),
+      keepalive: true
     });
     pushActive = true;
+
+    /* The server reports alerts it already fired while the app was closed —
+       drop them locally so they don't re-arm and fire again. */
+    try {
+      const { fired } = await res.json();
+      for (const id of fired || []) removeAlert(id);
+    } catch {}
     return true;
   } catch {
     return false;
@@ -175,9 +185,13 @@ export default function Notifier() {
       if (document.visibilityState === "visible") {
         syncPush();
         checkPrices();
+      } else {
+        /* App going to background/closed — flush the latest config now. */
+        syncPush();
       }
     };
     document.addEventListener("visibilitychange", onVis);
+    window.addEventListener("pagehide", syncPush);
 
     /* Gentle haptic tick whenever something tappable is opened. */
     const buzz = (e) => {
@@ -191,6 +205,7 @@ export default function Notifier() {
       clearInterval(id);
       unsub();
       document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("pagehide", syncPush);
       document.removeEventListener("click", buzz, true);
     };
   }, []);

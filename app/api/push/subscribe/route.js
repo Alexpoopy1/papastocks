@@ -11,8 +11,8 @@ export async function POST(req) {
   }
   const { subscription, config } = body || {};
   if (!subscription?.endpoint) return Response.json({ error: "subscription required" }, { status: 400 });
-  const count = await saveSubscription(subscription, config);
-  return Response.json({ ok: true, devices: count });
+  const { devices, fired } = await saveSubscription(subscription, config);
+  return Response.json({ ok: true, devices, fired });
 }
 
 export async function DELETE(req) {
